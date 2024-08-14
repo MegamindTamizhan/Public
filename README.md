@@ -1,5 +1,4 @@
-# Public
-
+```
 @echo off
 setlocal
 
@@ -45,3 +44,5 @@ echo Script completed successfully at %date% %time% >> "%LOGFILE%"
 
 endlocal
 exit /b 0
+```
+``

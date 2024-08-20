@@ -72,18 +72,12 @@ set "FAVORITESFOLDER=C:\Users\%USERNAME%\Favorites"
 set "CONTACTSFOLDER=C:\Users\%USERNAME%\Contacts"
 set "DOWNLOADSFOLDER=C:\Users\%USERNAME%\Downloads"
 
-:: Set read-only permissions for each folder
+:: Set read-only permissions with inheritance for each folder
 for %%F in ("%DESKTOPFOLDER%" "%DOCUMENTSFOLDER%" "%MUSICFOLDER%" "%PICTURESFOLDER%" "%VIDEOSFOLDER%" "%THREEDFOLDER%" "%SAVEDGAMESFOLDER%" "%SEARCHESFOLDER%" "%LINKSFOLDER%" "%FAVORITESFOLDER%" "%CONTACTSFOLDER%" "%DOWNLOADSFOLDER%") do (
     if exist "%%~F" (
         echo Setting permissions for "%%~F"... >> "%LOGFILE%"
-        
-        :: Remove existing permissions
         icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
-        icacls "%%~F" /grant:r "%USERNAME%:(RX)" >> "%LOGFILE%" 2>&1
-
-        :: Set read-only access for all files inside the folder
-        icacls "%%~F\*" /inheritance:r >> "%LOGFILE%" 2>&1
-        icacls "%%~F\*" /grant:r "%USERNAME%:(RX)" >> "%LOGFILE%" 2>&1
+        icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
 
         if errorlevel 1 (
             echo Error: Failed to set permissions for %%F at %date% %time% >> "%LOGFILE%"

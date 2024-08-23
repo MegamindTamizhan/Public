@@ -76,12 +76,21 @@ set "DOWNLOADSFOLDER=C:\Users\%USERNAME%\Downloads"
 for %%F in ("%DESKTOPFOLDER%" "%DOCUMENTSFOLDER%" "%MUSICFOLDER%" "%PICTURESFOLDER%" "%VIDEOSFOLDER%" "%THREEDFOLDER%" "%SAVEDGAMESFOLDER%" "%SEARCHESFOLDER%" "%LINKSFOLDER%" "%FAVORITESFOLDER%" "%CONTACTSFOLDER%" "%DOWNLOADSFOLDER%") do (
     if exist "%%~F" (
         echo Setting permissions for "%%~F"... >> "%LOGFILE%"
-        icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
-        icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
-
+        
+        :: Check current permissions
+        icacls "%%~F" | findstr /i "%USERNAME%:(F)" >nul
         if errorlevel 1 (
-            echo Error: Failed to set permissions for %%F at %date% %time% >> "%LOGFILE%"
-            exit /b 1
+            :: Reset permissions
+            icacls "%%~F" /reset >> "%LOGFILE%" 2>&1
+            icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
+            icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+
+            if errorlevel 1 (
+                echo Error: Failed to set permissions for %%F at %date% %time% >> "%LOGFILE%"
+                exit /b 1
+            )
+        ) else (
+            echo Folder "%%~F" already has full control. Skipping... >> "%LOGFILE%"
         )
     ) else (
         echo Warning: Folder "%%~F" does not exist. Skipping... >> "%LOGFILE%"
@@ -92,4 +101,35 @@ echo Script completed successfully at %date% %time% >> "%LOGFILE%"
 
 endlocal
 exit /b 0
+
+```
+
+# D_Drive_Exisiting_Read_Only
+
+```
+@echo off
+setlocal
+
+set "excludeFolder=D:\%USERNAME%-Data"
+set "LOGFILE=%TEMP%\d_drive_permission_log.txt"
+
+rem Loop through all directories in D: drive
+for /d %%D in (D:\*) do (
+    if /I not "%%D"=="%excludeFolder%" (
+        icacls "%%~D" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~D" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+rem Loop through all files in D: drive
+for /r D:\ %%F in (*) do (
+    if /I not "%%F"=="%excludeFolder%\*" (
+        icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+echo Permissions set successfully.
+endlocal
+
 ```

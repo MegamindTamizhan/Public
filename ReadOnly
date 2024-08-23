@@ -129,7 +129,7 @@ for /r D:\ %%F in (*) do (
     )
 )
 
-echo Permissions set successfully.
+echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
 endlocal
 
 ```

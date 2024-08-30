@@ -1,4 +1,4 @@
-# To connect to an Azure Blob Storage container in your Java application using a Shared Access Signature (SAS), follow these steps:
+# To connect to an Azure Blob Storage container in your Java application using an access key, follow these steps:
 
 ## 1. Prerequisites:
 
@@ -33,47 +33,36 @@
 </dependencies>
 ```
 
-## 3. Generate a SAS Token
-
-* Generate SAS Token
-  * You can generate a SAS token using the Azure Portal, Azure CLI, or Azure SDKs. Here’s an example using Azure CLI:
-```
-az storage blob generate-sas \
-  --account-name <your-storage-account-name> \
-  --container-name <your-container-name> \
-  --permissions rwdlac \
-  --expiry <expiry-date> \
-  --output tsv
-```
-
-| Replace `<your-storage-account-name>`, `<your-container-name>`, and `<expiry-date>` with your actual values.
-
-## 4. Connect to Blob Storage Using SAS Token
+## 3. Authorize Access and Connect to Blob Storage
 
 * Import Required Classes:
   * Add the necessary import statements in your Java file:
 ```
 import com.azure.storage.blob.*;
 import com.azure.storage.blob.models.*;
+import com.azure.storage.common.StorageSharedKeyCredential;
 ```
-
 * Create a BlobServiceClient:
-  * Use the SAS token to authenticate:
+ * Use the storage account name and access key to authenticate:
+
 ```
-String sasToken = "<your-sas-token>";
-String blobServiceUrl = "https://<your-storage-account-name>.blob.core.windows.net";
+String accountName = "<your-storage-account-name>";
+String accountKey = "<your-storage-account-key>";
+StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
+
 BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-    .endpoint(blobServiceUrl)
-    .sasToken(sasToken)
+    .endpoint("https://" + accountName + ".blob.core.windows.net")
+    .credential(credential)
     .buildClient();
 ```
 * Get a Reference to the Container:
-  * Access your container:
+ * Access your container:
+
 ```
 BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient("<your-container-name>");
 ```
 
-## 5. Upload and Download Blobs
+## 4. Upload and Download Blobs
 
 * Upload a Blob:
   * Upload a file to the container:
@@ -89,6 +78,6 @@ blobClient.uploadFromFile("path/to/local/file.txt");
 blobClient.downloadToFile("path/to/downloaded/file.txt");
 ```
 
-## 6. Run Your Application
+## 5. Run Your Application
 
 * Compile and run your application to ensure it connects to Azure Blob Storage and performs the upload/download operations.

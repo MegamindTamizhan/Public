@@ -133,3 +133,42 @@ echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
 endlocal
 
 ```
+
+# D Drive Read-Only New
+
+```
+@echo off
+setlocal
+
+set "excludeFolder=D:\%USERNAME%-Data"
+set "LOGFILE=%TEMP%\d_drive_permission_log.txt"
+
+rem Normalize the exclude folder to ensure comparisons are accurate
+set "excludeFolder=%excludeFolder:\=\\%"
+
+rem Loop through all directories in D: drive
+for /d %%D in (D:\*) do (
+    rem Normalize the current directory path for comparison
+    set "currentDir=%%~fD"
+    set "currentDir=!currentDir:\=\\!"
+
+    rem Exclude the %USERNAME%-Data folder
+    if /I not "!currentDir!"=="%excludeFolder%" (
+        icacls "%%~D" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~D" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+rem Loop through all files in D: drive
+for /r D:\ %%F in (*) do (
+    rem Check if the file is inside the excluded folder
+    echo %%F | findstr /I /C:"%USERNAME%-Data" >nul
+    if errorlevel 1 (
+        icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
+endlocal
+```

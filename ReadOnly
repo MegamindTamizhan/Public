@@ -172,3 +172,44 @@ for /r D:\ %%F in (*) do (
 echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
 endlocal
 ```
+
+# Exclude Download & UserData
+
+```
+@echo off
+setlocal
+
+set "excludeFolder1=D:\%USERNAME%-Data"
+set "excludeFolder2=D:\Downloads"
+set "LOGFILE=%TEMP%\d_drive_permission_log.txt"
+
+rem Normalize exclude folder paths for accurate comparison
+set "excludeFolder1=%excludeFolder1:\=\\%"
+set "excludeFolder2=%excludeFolder2:\=\\%"
+
+rem Loop through all directories in D: drive
+for /d %%D in (D:\*) do (
+    rem Normalize the current directory path for comparison
+    set "currentDir=%%~fD"
+    set "currentDir=!currentDir:\=\\!"
+
+    rem Exclude the %USERNAME%-Data and Downloads folders
+    if /I not "!currentDir!"=="%excludeFolder1%" if /I not "!currentDir!"=="%excludeFolder2%" (
+        icacls "%%~D" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~D" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+rem Loop through all files in D: drive
+for /r D:\ %%F in (*) do (
+    rem Check if the file is inside the excluded folders
+    echo %%F | findstr /I /C:"%USERNAME%-Data" /C:"Downloads" >nul
+    if errorlevel 1 (
+        icacls "%%~F" /inheritance:r >> "%LOGFILE%" 2>&1
+        icacls "%%~F" /grant:r "%USERNAME%:(RX)" /t /c /q >> "%LOGFILE%" 2>&1
+    )
+)
+
+echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
+endlocal
+```

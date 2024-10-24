@@ -213,3 +213,48 @@ for /r D:\ %%F in (*) do (
 echo Permissions set successfully at %date% %time% >> "%LOGFILE%"
 endlocal
 ```
+
+# Folder Creation
+
+```
+@echo off
+setlocal
+
+:: Set user-specific folder paths
+set "USERNAME=%USERNAME%"
+set "USERFOLDER1=D:\%USERNAME%"        :: Main user folder
+set "USERFOLDER2=D:\%USERNAME%-Data"   :: User data folder
+
+:: Create D:\%USERNAME% folder if it doesn't exist
+if not exist "%USERFOLDER1%" (
+    mkdir "%USERFOLDER1%"
+    echo Created folder: %USERFOLDER1%
+)
+
+:: Create D:\%USERNAME%-Data folder if it doesn't exist
+if not exist "%USERFOLDER2%" (
+    mkdir "%USERFOLDER2%"
+    echo Created folder: %USERFOLDER2%
+)
+
+:: Set appropriate permissions for D:\%USERNAME% folder
+icacls "%USERFOLDER1%" /inheritance:r
+icacls "%USERFOLDER1%" /grant "%USERNAME%:(OI)(CI)(M,RX,W)"
+icacls "%USERFOLDER1%" /grant "Domain Admins:(OI)(CI)(F)"
+icacls "%USERFOLDER1%" /deny "%USERNAME%:(DE)"
+
+:: Set appropriate permissions for D:\%USERNAME%-Data folder
+icacls "%USERFOLDER2%" /inheritance:r
+icacls "%USERFOLDER2%" /grant "%USERNAME%:(OI)(CI)(M,RX,W)"
+icacls "%USERFOLDER2%" /grant "Domain Admins:(OI)(CI)(F)"
+icacls "%USERFOLDER2%" /deny "%USERNAME%:(DE)"
+
+if errorlevel 1 (
+    echo Error: Failed to set permissions for user folders.
+    exit /b 1
+)
+
+echo User folders created and permissions applied successfully.
+endlocal
+exit /b 0
+```

@@ -258,3 +258,55 @@ echo User folders created and permissions applied successfully.
 endlocal
 exit /b 0
 ```
+
+hotfix
+
+```
+# Define the output path (central network share) where reports will be stored
+$outputPath = "\\172.16.5.95\Share"
+$tempDebugPath = "$env:TEMP\kbScriptDebug.log"
+
+# Log start of the script execution
+"Script started at $(Get-Date)" | Out-File -FilePath $tempDebugPath -Append
+
+# Check if network path exists and log the check
+if (!(Test-Path -Path $outputPath)) {
+    New-Item -ItemType Directory -Path $outputPath -ErrorAction SilentlyContinue
+    "Output path created or verified: $outputPath" | Out-File -FilePath $tempDebugPath -Append
+} else {
+    "Output path already exists: $outputPath" | Out-File -FilePath $tempDebugPath -Append
+}
+
+# Get the computer name
+$computerName = $env:COMPUTERNAME
+"Computer Name: $computerName" | Out-File -FilePath $tempDebugPath -Append
+
+# Get the latest 10 installed hotfixes
+try {
+    $hotfixes = Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 10
+    "Hotfixes retrieved successfully" | Out-File -FilePath $tempDebugPath -Append
+} catch {
+    "Error retrieving hotfixes: $_" | Out-File -FilePath $tempDebugPath -Append
+}
+
+# Define the output file path
+$outputFile = "$outputPath\$computerName-KBReport.csv"
+"Output file path: $outputFile" | Out-File -FilePath $tempDebugPath -Append
+
+# Export the output to CSV with headers
+try {
+    $hotfixes | Export-Csv -Path $outputFile -NoTypeInformation -Force
+    "Hotfixes exported to CSV successfully" | Out-File -FilePath $tempDebugPath -Append
+} catch {
+    "Error exporting hotfixes to CSV: $_" | Out-File -FilePath $tempDebugPath -Append
+}
+
+# Optional: add error handling if you want to log failures
+if ($hotfixes -eq $null) {
+    "No hotfixes found on $computerName" | Out-File -FilePath $outputFile
+    "No hotfixes found - logged to output file" | Out-File -FilePath $tempDebugPath -Append
+}
+
+# Log end of script execution
+"Script ended at $(Get-Date)" | Out-File -FilePath $tempDebugPath -Append
+```
